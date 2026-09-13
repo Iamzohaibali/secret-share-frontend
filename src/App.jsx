@@ -8,6 +8,8 @@ import SecretDetail from "./pages/SecretDetail.jsx";
 import ShareView from "./pages/ShareView.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
+//jhfjsdhajfag
+
 export default function App() {
   return (
     <div className="min-h-screen bg-slate-950">
