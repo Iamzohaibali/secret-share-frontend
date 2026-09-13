@@ -28,10 +28,11 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const { data } = await api.get("/secrets");
-      setSecrets(data.data);
-      setLimit(data.limit);
+      setSecrets(Array.isArray(data?.data) ? data.data : []);
+      setLimit(data?.limit ?? 100);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load secrets");
+      setSecrets([]);
     } finally {
       setLoading(false);
     }
