@@ -5,6 +5,7 @@ import { Copy, Check, ArrowLeft, Clock, Eye } from "lucide-react";
 import { api, attachAuthInterceptor } from "../lib/api.js";
 import Loader from "../components/Loader.jsx";
 import StatusBadge from "../components/StatusBadge.jsx";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal.jsx";
 import { useCountdown } from "../hooks/useCountdown.js";
 import { formatRelativeTime, formatExactDateTime } from "../lib/time.js";
 
@@ -16,6 +17,8 @@ export default function SecretDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -43,9 +46,15 @@ export default function SecretDetail() {
   };
 
   const handleDelete = async () => {
-    if (!confirm("Delete this secret? This cannot be undone.")) return;
-    await api.delete(`/secrets/${id}`);
-    navigate("/dashboard");
+    try {
+      setDeleting(true);
+      await api.delete(`/secrets/${id}`);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete secret");
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
   };
 
   if (loading) return <Loader />;
@@ -139,12 +148,20 @@ export default function SecretDetail() {
         </div>
 
         <button
-          onClick={handleDelete}
+          onClick={() => setShowDeleteModal(true)}
           className="mt-6 w-full rounded-lg border border-red-500/30 py-2.5 text-sm font-medium text-red-400 hover:bg-red-500/10"
         >
           Delete secret
         </button>
       </div>
+
+      <ConfirmDeleteModal
+        open={showDeleteModal}
+        title={secret.title}
+        deleting={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 }

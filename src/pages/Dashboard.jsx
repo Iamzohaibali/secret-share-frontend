@@ -1,10 +1,11 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Inbox } from "lucide-react";
 import { api, attachAuthInterceptor } from "../lib/api.js";
 import SecretCard from "../components/SecretCard.jsx";
 import Loader from "../components/Loader.jsx";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal.jsx";
 
 export default function Dashboard() {
   const { getToken, isLoaded } = useAuth();
@@ -13,6 +14,8 @@ export default function Dashboard() {
   const [limit, setLimit] = useState(100);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -34,13 +37,17 @@ export default function Dashboard() {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm("Delete this secret? This cannot be undone.")) return;
+  const handleDelete = async () => {
+    if (!pendingDelete) return;
     try {
-      await api.delete(`/secrets/${id}`);
-      setSecrets((prev) => prev.filter((s) => s.id !== id));
+      setDeleting(true);
+      await api.delete(`/secrets/${pendingDelete.id}`);
+      setSecrets((prev) => prev.filter((s) => s.id !== pendingDelete.id));
+      setPendingDelete(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete secret");
+      setError(err.response?.data?.message || "Failed to delete secret");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -79,10 +86,18 @@ export default function Dashboard() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {secrets.map((secret) => (
-            <SecretCard key={secret.id} secret={secret} onDelete={handleDelete} />
+            <SecretCard key={secret.id} secret={secret} onDelete={() => setPendingDelete(secret)} />
           ))}
         </div>
       )}
+
+      <ConfirmDeleteModal
+        open={Boolean(pendingDelete)}
+        title={pendingDelete?.title || ""}
+        deleting={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

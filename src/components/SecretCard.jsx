@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Lock, Flame, Eye, Tag } from "lucide-react";
 import StatusBadge from "./StatusBadge.jsx";
 
@@ -49,7 +49,7 @@ export default function SecretCard({ secret, onDelete }) {
           View details â†’
         </Link>
         <button
-          onClick={() => onDelete(secret.id)}
+          onClick={() => onDelete(secret)}
           className="text-sm text-slate-500 opacity-0 transition hover:text-red-400 group-hover:opacity-100"
         >
           Delete
